@@ -4,16 +4,13 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu } from "lucide-react"
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import { authClient } from "@/lib/auth-client"
 
 const NAV_LINKS = [
   { name: "Browse Jobs", href: "/jobs" },
@@ -21,10 +18,15 @@ const NAV_LINKS = [
   { name: "Pricing", href: "/pricing" },
 ]
 
-
 export default function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+
+  const { data: session } = authClient.useSession()
+
+  const handleSignOut =async () => {
+    await authClient.signOut()
+  }
 
   const isLinkActive = (href: string) => {
     if (href === "/") {
@@ -33,24 +35,18 @@ export default function Navbar() {
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 
-  const isSignInActive =
-    pathname === "/sign-in" || pathname === "/login"
+  const isSignInActive = pathname === "/sign-in" || pathname === "/login"
 
   return (
-    <header className=" sticky top-0 z-50 w-full px-3 py-3 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full px-3 py-3 sm:px-6 lg:px-8">
       <nav
         aria-label="Main Navigation"
-        className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/[0.08] bg-[#14151a]/95 px-4 py-2.5 sm:px-6 sm:py-3 shadow-xl shadow-black/30 backdrop-blur-md"
+        className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/[0.08] bg-[#14151a]/95 px-4 py-2.5 shadow-xl shadow-black/30 backdrop-blur-md sm:px-6 sm:py-3"
       >
         {/* Brand Logo */}
-      <Link href="/">
-        <Image 
-         src='/logo.png'
-         width={154}
-         height={44}
-         alt="logo"
-        />
-      </Link>
+        <Link href="/">
+          <Image src="/logo.png" width={154} height={44} alt="logo" />
+        </Link>
 
         {/* Desktop Navigation & Actions */}
         <div className="hidden items-center gap-6 md:flex lg:gap-8">
@@ -76,7 +72,6 @@ export default function Navbar() {
             })}
           </ul>
 
-     
           <Separator
             orientation="vertical"
             className="w-px bg-neutral-700/70"
@@ -84,38 +79,73 @@ export default function Navbar() {
 
           {/* Right Action Buttons */}
           <div className="flex items-center gap-4 lg:gap-5">
-            <Link
-              href="/sign-in"
-              className={cn(
-                "text-sm font-medium transition-colors duration-200",
-                isSignInActive
-                  ? "font-semibold text-[#7b75f8] underline underline-offset-4 decoration-[#7b75f8]"
-                  : " text-white hover:text-[#958eff]"
-              )}
-            >
-              Sign In
-            </Link>
+            {session?.user ? (
+              <div className="flex items-center gap-2.5">
+                <Avatar className="size-8 border border-zinc-700/80">
+                  <AvatarImage
+                    src={session?.user?.image as string}
+                    alt={session?.user?.name || "User"}
+                  />
+                  <AvatarFallback className="bg-indigo-600 text-xs font-semibold text-white">
+                    {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-white max-w-35 truncate">
+                  {session?.user?.name}
+                </span>
+                <Button onClick={handleSignOut} variant={'destructive'}>SignOut</Button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className={cn(
+                    "text-sm font-medium transition-colors duration-200",
+                    isSignInActive
+                      ? "font-semibold text-[#7b75f8] underline decoration-[#7b75f8] underline-offset-4"
+                      : "text-white hover:text-[#958eff]"
+                  )}
+                >
+                  Sign In
+                </Link>
 
-            <Button
-              nativeButton={false}
-              className="h-9 rounded-xl bg-[#5d63f6] px-4.5 text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 transition-all duration-200 hover:bg-[#4d53e8] hover:shadow-[#5d63f6]/40 active:scale-[0.98]"
-              render={<Link href="/get-started" />}
-            >
-              Get Started
-            </Button>
+                <Button
+                  nativeButton={false}
+                  className="h-9 rounded-xl bg-[#5d63f6] px-4.5 text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 transition-all duration-200 hover:bg-[#4d53e8] hover:shadow-[#5d63f6]/40 active:scale-[0.98]"
+                  render={<Link href="/sign-up" />}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
         {/* Mobile Hamburger Trigger & Sheet Drawer */}
         <div className="flex items-center gap-2 md:hidden">
-          <Button
-            nativeButton={false}
-            size="sm"
-            className="h-8 rounded-lg bg-[#5d63f6] px-3 text-xs font-medium text-white shadow-sm hover:bg-[#4d53e8]"
-            render={<Link href="/get-started" />}
-          >
-            Get Started
-          </Button>
+          {session?.user ? (
+            <>
+            <Avatar className="size-8 border border-zinc-700/80">
+              <AvatarImage
+                src={session?.user?.image as string}
+                alt={session?.user?.name || "User"}
+              />
+              <AvatarFallback className="bg-indigo-600 text-xs font-semibold text-white">
+                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+           
+            </>
+          ) : (
+            <Button
+              nativeButton={false}
+              size="sm"
+              className="h-8 rounded-lg bg-[#5d63f6] px-3 text-xs font-medium text-white shadow-sm hover:bg-[#4d53e8]"
+              render={<Link href="/sign-up" />}
+            >
+              Get Started
+            </Button>
+          )}
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
@@ -135,12 +165,9 @@ export default function Navbar() {
               side="right"
               className="w-72 border-neutral-800 bg-[#14151a] p-6 text-white"
             >
-            
-
               <div className="mt-8 flex flex-col gap-6">
                 {/* Navigation Links */}
                 <div className="flex flex-col gap-2">
-                  
                   <ul className="flex flex-col gap-1">
                     {NAV_LINKS.map((link) => {
                       const active = isLinkActive(link.href)
@@ -168,31 +195,58 @@ export default function Navbar() {
 
                 {/* Auth Actions */}
                 <div className="flex flex-col gap-3">
-                  <Link
-                    href="/sign-in"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center justify-center rounded-lg border border-neutral-700/60 py-2 text-sm font-medium transition-colors",
-                      isSignInActive
-                        ? "border-[#7b75f8] text-white"
-                        : "text-[#7b75f8] hover:bg-[#7b75f8]/10 hover:text-[#958eff]"
-                    )}
-                  >
-                    Sign In
-                  </Link>
+                  {session?.user ? (
+                    <div className="flex items-center gap-3 p-2.5 rounded-xl border border-neutral-800 bg-neutral-900/60">
+                      <Avatar className="size-9 border border-zinc-700/80">
+                        <AvatarImage
+                          src={session?.user?.image as string}
+                          alt={session?.user?.name || "User"}
+                        />
+                        <AvatarFallback className="bg-indigo-600 text-xs font-semibold text-white">
+                          {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-medium text-white truncate">
+                          {session?.user?.name}
+                        </span>
+                        <span className="text-xs text-neutral-400 truncate">
+                          {session?.user?.email}
 
-                  <Button
-                    nativeButton={false}
-                    className="w-full rounded-xl bg-[#5d63f6] py-2.5 text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 hover:bg-[#4d53e8]"
-                    render={
+                        </span>
+                         
+                      </div>
+                      <Button onClick={handleSignOut} variant={'destructive'}>SignOut</Button>
+                    </div>
+                  ) : (
+                    <>
                       <Link
-                        href="/get-started"
+                        href="/sign-in"
                         onClick={() => setMobileMenuOpen(false)}
-                      />
-                    }
-                  >
-                    Get Started
-                  </Button>
+                        className={cn(
+                          "flex items-center justify-center rounded-lg border border-neutral-700/60 py-2 text-sm font-medium transition-colors",
+                          isSignInActive
+                            ? "border-[#7b75f8] text-white"
+                            : "text-[#7b75f8] hover:bg-[#7b75f8]/10 hover:text-[#958eff]"
+                        )}
+                      >
+                        Sign In
+                      </Link>
+
+                      <Button
+                        nativeButton={false}
+                        className="w-full rounded-xl bg-[#5d63f6] py-2.5 text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 hover:bg-[#4d53e8]"
+                        render={
+                          <Link
+                            href="/sign-up"
+                            onClick={() => setMobileMenuOpen(false)}
+                          />
+                        }
+                      >
+                        Get Started
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </SheetContent>

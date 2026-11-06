@@ -2,37 +2,95 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { useRouter } from "next/navigation"
+import {
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Building2,
+  ShieldCheck,
+  Briefcase,
+  Loader2,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { authClient } from "@/lib/auth-client"
+import { cn } from "@/lib/utils"
+
+type Role = "seeker" | "recruiter" | "admin"
+
+const ROLE_OPTIONS: {
+  id: Role
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}[] = [
+  { id: "seeker", label: "Seeker", icon: Briefcase },
+  { id: "recruiter", label: "Recruiter", icon: Building2 },
+  { id: "admin", label: "Admin", icon: ShieldCheck },
+]
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [role, setRole] = useState<Role>("seeker")
   const [showPassword, setShowPassword] = useState(false)
-
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setErrorMessage(null)
+    setLoading(true)
+
     const formData = {
       name,
       email,
       password,
+      role,
     }
-    // console.log("Sign Up Form Data:", formData)
-    const {data ,error} =  await authClient.signUp.email({
+
+    try {
+      const { data, error } = await authClient.signUp.email({
         ...formData,
         callbackURL: "/",
-    })
-    // console.log("signUp response", data, error);
+      })
+
+      if (error) {
+        setErrorMessage(error.message || "Failed to create account")
+        setLoading(false)
+        return
+      }
+
+      if (data) {
+        router.push("/")
+      }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      setErrorMessage(message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleGoogleSignUp = () => {
-    console.log("Google Sign Up clicked")
+  const handleGoogleSignUp = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      })
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Google sign-up failed"
+      setErrorMessage(message)
+    }
   }
 
   return (
@@ -68,8 +126,49 @@ export default function SignUpPage() {
 
         {/* Form Container */}
         <div className="rounded-2xl border border-zinc-800/80 bg-[#0b0c14]/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          {/* Error Banner */}
+          {errorMessage && (
+            <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400">
+              {errorMessage}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Role Selection */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-zinc-300">
+                Join as
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {ROLE_OPTIONS.map((item) => {
+                  const Icon = item.icon
+                  const isSelected = role === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setRole(item.id)}
+                      className={cn(
+                        "flex cursor-pointer flex-col items-center justify-center rounded-xl border p-2.5 text-center transition select-none",
+                        isSelected
+                          ? "border-indigo-500 bg-indigo-600/15 text-white ring-1 ring-indigo-500"
+                          : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          "mb-1 h-4 w-4",
+                          isSelected ? "text-indigo-400" : "text-zinc-500"
+                        )}
+                      />
+                      <span className="text-xs font-semibold">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
             {/* Full Name Field */}
             <div className="space-y-1.5">
               <Label
@@ -148,15 +247,23 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            
-            
             {/* Submit Button */}
             <Button
               type="submit"
-              className="mt-2 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-indigo-600 text-sm font-medium text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
+              disabled={loading}
+              className="mt-2 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-indigo-600 text-sm font-medium text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 disabled:opacity-60"
             >
-              Create Account
-              <ArrowRight className="h-4 w-4" />
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </Button>
           </form>
 
@@ -196,19 +303,18 @@ export default function SignUpPage() {
             </svg>
             Continue with Google
           </Button>
-           {/* Footer Link to Sign In */}
-        <p className="mt-6 text-center text-xs text-zinc-400">
-          Already have an account?{" "}
-          <Link
-            href="/sign-in"
-            className="font-medium text-indigo-400 transition hover:text-indigo-300"
-          >
-            Sign in
-          </Link>
-        </p>
-        </div>
 
-       
+          {/* Footer Link to Sign In */}
+          <p className="mt-6 text-center text-xs text-zinc-400">
+            Already have an account?{" "}
+            <Link
+              href="/sign-in"
+              className="font-medium text-indigo-400 transition hover:text-indigo-300"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

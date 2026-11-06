@@ -37,7 +37,7 @@ export default function Navbar() {
     pathname === "/sign-in" || pathname === "/login"
 
   return (
-    <header className="sticky top-0 z-50 w-full px-3 py-3 sm:px-6 lg:px-8">
+    <header className=" sticky top-0 z-50 w-full px-3 py-3 sm:px-6 lg:px-8">
       <nav
         aria-label="Main Navigation"
         className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/[0.08] bg-[#14151a]/95 px-4 py-2.5 sm:px-6 sm:py-3 shadow-xl shadow-black/30 backdrop-blur-md"
@@ -65,7 +65,7 @@ export default function Navbar() {
                     className={cn(
                       "text-sm transition-colors duration-200",
                       active
-                        ? "font-semibold text-white drop-shadow-[0_1px_4px_rgba(255,255,255,0.25)]"
+                        ? "font-semibold text-[#958eff] drop-shadow-[0_1px_4px_rgba(255,255,255,0.25)]"
                         : "font-medium text-neutral-400 hover:text-[#958eff]"
                     )}
                   >

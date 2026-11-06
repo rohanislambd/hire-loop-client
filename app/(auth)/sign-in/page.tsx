@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { authClient } from '@/lib/auth-client';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -14,13 +15,17 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
 
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = {
       email,
       password,
     };
-    console.log('Sign In Form Data:', formData);
+    // console.log('Sign In Form Data:', formData);
+    const { data, error } = await authClient.signIn.email({
+        ...formData,
+        callbackURL: "/",
+    })
   };
 
   const handleGoogleSignIn = () => {

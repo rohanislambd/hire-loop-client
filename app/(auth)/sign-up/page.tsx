@@ -28,7 +28,7 @@ export default function SignUpPage() {
         ...formData,
         callbackURL: "/",
     })
-    console.log("signUp response", data, error);
+    // console.log("signUp response", data, error);
   }
 
   const handleGoogleSignUp = () => {

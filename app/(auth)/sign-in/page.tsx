@@ -28,8 +28,10 @@ export default function SignInPage() {
     })
   };
 
-  const handleGoogleSignIn = () => {
-    console.log('Google Sign In clicked');
+  const handleGoogleSignIn = async() => {
+     const data = await authClient.signIn.social({
+      provider: "google"
+     })
   };
 
   return (

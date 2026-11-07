@@ -140,7 +140,7 @@ const menuItemsByRole: Record<Role, MenuItem[]> = {
 }
 
 export function DashboardSidebar() {
-  const { data: session, isPending } = authClient.useSession()
+  const { data: session } = authClient.useSession()
 
   const role = session?.user?.role || "seeker"
 

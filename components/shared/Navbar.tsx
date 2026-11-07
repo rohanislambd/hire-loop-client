@@ -12,17 +12,20 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 
-const NAV_LINKS = [
-  { name: "Browse Jobs", href: "/jobs" },
-  { name: "Company", href: "/company" },
-  { name: "Pricing", href: "/pricing" },
-]
 
 export default function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
   const { data: session } = authClient.useSession()
+
+  const NAV_LINKS = [
+  { name: "Browse Jobs", href: "/jobs" },
+  { name: "Company", href: "/company" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "Dashboard", href: `/dashboard/${session?.user?.role  || "seeker"}` },
+]
+
 
   const handleSignOut =async () => {
     await authClient.signOut()

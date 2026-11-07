@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, Briefcase, Building2, Users, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function Hero() {
   const router = useRouter();
@@ -142,6 +143,22 @@ export default function Hero() {
         </div>
       </div>
 
+      {/* image */}
+     <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex justify-center"
+      >
+        <Image
+          src="/globe.png"
+          alt=""
+          width={1230}
+          height={600}
+          priority
+          sizes="(min-width: 1024px) 1280px, (min-width: 640px) 900px, 800px"
+          className="w-[800px] max-w-none shrink-0 translate-y-[10%] opacity-80 select-none [mask-image:linear-gradient(to_bottom,transparent_27%,black_45%)] sm:w-[900px] sm:translate-y-[16%] lg:w-[1280px] lg:translate-y-[29%]"
+        />
+      </div>
+
       
       <div className="relative z-10 max-w-5xl mx-auto w-full px-4 mt-16 sm:mt-20">
         <div className="text-center mb-8 sm:mb-10">
@@ -152,6 +169,8 @@ export default function Hero() {
             find their dream positions.
           </p>
         </div>
+
+
 
         {/* card section*/}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

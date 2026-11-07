@@ -15,11 +15,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import { createJobs } from "@/lib/actions/jobs"
 
-const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"] as const
-type JobType = (typeof JOB_TYPES)[number]
+export const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"] as const
+export type JobType = (typeof JOB_TYPES)[number]
 
-const JOB_CATEGORIES = [
+export const JOB_CATEGORIES = [
   "Engineering & Tech",
   "Product & Design",
   "Marketing & Growth",
@@ -27,7 +28,22 @@ const JOB_CATEGORIES = [
   "Sales & Business",
 ]
 
-const SALARY_FREQUENCIES = ["per hour", "per month", "per year"]
+export const SALARY_FREQUENCIES = ["per hour", "per month", "per year"]
+
+export interface JobData {
+  title: string
+  company: string
+  category: string
+  jobType: JobType | ""
+  isRemote: boolean
+  location: string
+  deadline: string
+  minSalary: string
+  maxSalary: string
+  frequency: string
+  responsibilities: string
+  qualifications: string
+}
 
 export default function PostNewJobPage() {
   const [jobTitle, setJobTitle] = useState("")
@@ -46,9 +62,9 @@ export default function PostNewJobPage() {
   const [responsibilities, setResponsibilities] = useState("")
   const [qualifications, setQualifications] = useState("")
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault()
-    const jobData = {
+    const jobData: JobData = {
       title: jobTitle,
       company: companyName,
       category,
@@ -56,15 +72,14 @@ export default function PostNewJobPage() {
       isRemote,
       location,
       deadline,
-      salary: {
-        min: minSalary,
-        max: maxSalary,
-        frequency,
-      },
+      minSalary,
+      maxSalary,
+      frequency,
       responsibilities,
       qualifications,
     }
-    console.log("Publishing Job Listing:", jobData)
+    const result = await createJobs(jobData)
+    console.log("Job created successfully:", result)
   }
 
   return (

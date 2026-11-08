@@ -31,6 +31,7 @@ export const JOB_CATEGORIES = [
 export const SALARY_FREQUENCIES = ["per hour", "per month", "per year"]
 
 export interface JobData {
+  _id?: string
   title: string
   company: string
   category: string

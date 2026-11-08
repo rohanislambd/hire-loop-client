@@ -1,7 +1,7 @@
-
 import React from "react"
 import Link from "next/link"
 import {
+  Briefcase,
   ChevronRight,
   Code2,
   Globe,
@@ -13,23 +13,22 @@ import {
   Plus,
   ShieldCheck,
   Terminal,
-  Trash2,
   Users,
 } from "lucide-react"
 
 import type { JobData } from "@/app/dashboard/recruiter/jobs/new/page"
-import { cn } from "@/lib/utils"
 import { getJobs } from "@/lib/api/jobs"
+import { cn } from "@/lib/utils"
+import { DeleteJobsDialog } from "@/app/components/DeleteJobsdialog"
 
 export interface JobPostItem extends JobData {
   _id: string
-  department: string
+  department?: string
   currency?: string
-  applicantsCount: number
-  status: "Active" | "Expired" | "Draft"
-  postedAt: string
+  applicantsCount?: number
+  status?: "Active" | "Expired" | "Draft"
+  postedAt?: string
 }
-
 
 const DEPARTMENT_CONFIGS: Record<
   string,
@@ -66,18 +65,33 @@ const DEPARTMENT_CONFIGS: Record<
   },
 }
 
+function getDeptConfig(deptName?: string) {
+  if (!deptName) return DEPARTMENT_CONFIGS.Engineering
+  if (DEPARTMENT_CONFIGS[deptName]) return DEPARTMENT_CONFIGS[deptName]
+  const lower = deptName.toLowerCase()
+  if (lower.includes("design")) return DEPARTMENT_CONFIGS.Design
+  if (lower.includes("market")) return DEPARTMENT_CONFIGS.Marketing
+  if (lower.includes("infra") || lower.includes("devops"))
+    return DEPARTMENT_CONFIGS.Infrastructure
+  if (lower.includes("qa") || lower.includes("quality"))
+    return DEPARTMENT_CONFIGS.Quality
+  return DEPARTMENT_CONFIGS.Engineering
+}
+
 function formatCompensation(
-  min: string,
-  max: string,
-  frequency: string,
+  min?: string,
+  max?: string,
+  frequency?: string,
   currency = "€"
 ) {
-  const freqLower = frequency.toLowerCase()
+  if (!min && !max) return "Negotiable"
+  const freqLower = (frequency || "year").toLowerCase()
   let freqShort = "mo"
   if (freqLower.includes("hour")) freqShort = "hr"
   else if (freqLower.includes("year")) freqShort = "yr"
 
-  const formatVal = (v: string) => {
+  const formatVal = (v?: string) => {
+    if (!v) return ""
     if (v.toLowerCase().endsWith("k")) return `${currency}${v}`
     const num = Number(v)
     if (!isNaN(num) && num >= 1000) {
@@ -86,10 +100,14 @@ function formatCompensation(
     return `${currency}${v}`
   }
 
-  return `${formatVal(min)} - ${formatVal(max)} / ${freqShort}`
+  if (min && max) {
+    return `${formatVal(min)} - ${formatVal(max)} / ${freqShort}`
+  }
+  return `${formatVal(min || max)} / ${freqShort}`
 }
 
-function formatDeadline(deadlineStr: string) {
+function formatDeadline(deadlineStr?: string) {
+  if (!deadlineStr) return "Open until filled"
   try {
     const d = new Date(deadlineStr)
     if (isNaN(d.getTime())) return deadlineStr
@@ -104,12 +122,11 @@ function formatDeadline(deadlineStr: string) {
 }
 
 export default async function ManageJobsPage() {
-
-  const jobs: JobPostItem [] = await getJobs()
+  const jobs: JobPostItem[] = await getJobs()
 
   return (
-    <div className="min-h-screen w-full bg-[#090a0f] text-white px-4 py-8 sm:px-8 sm:py-10">
-      <div className="mx-auto max-w-8xl space-y-8">
+    <div className="min-h-screen w-full bg-[#090a0f] text-white px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-8xl space-y-6 sm:space-y-8">
         {/* Top Header & Breadcrumb */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -117,11 +134,13 @@ export default async function ManageJobsPage() {
               aria-label="Breadcrumb"
               className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium"
             >
-              <span>Manage Jobs</span>
+              <span className="hover:text-zinc-300 transition-colors">
+                Manage Jobs
+              </span>
               <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
               <span className="text-[#8c84fc]">Job Listings & Postings</span>
             </nav>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
               Manage Job Posts
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400">
@@ -131,171 +150,337 @@ export default async function ManageJobsPage() {
 
           <Link
             href="/dashboard/recruiter/jobs/new"
-            className="self-start sm:self-center inline-flex items-center gap-2 rounded-xl bg-[#5d63f6] hover:bg-[#4d53e8] px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 transition-all cursor-pointer"
+            className="self-start sm:self-center inline-flex items-center gap-2 rounded-xl bg-[#5d63f6] hover:bg-[#4d53e8] px-4 py-2.5 text-xs sm:text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 transition-all cursor-pointer shrink-0"
           >
             <Plus className="h-4 w-4" />
             <span>New Job Post</span>
           </Link>
         </div>
 
-        {/* Responsive Table Container */}
-        <div className="w-full rounded-2xl border border-zinc-800/80 bg-[#0d0e15] shadow-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1460px] text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-800/80 bg-[#12131b]/70 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                  <th className="px-5 py-4">Job Title & Dept</th>
-                  <th className="px-5 py-4">Company & Location</th>
-                  <th className="px-5 py-4">Type</th>
-                  <th className="px-5 py-4">Compensation</th>
-                  <th className="px-5 py-4">Applicants</th>
-                  <th className="px-5 py-4">Status</th>
-                  <th className="px-5 py-4">Deadline</th>
-                  <th className="px-5 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60 text-sm">
-                {jobs.map((job) => {
-                  const deptConfig =
-                    DEPARTMENT_CONFIGS[job.department] ??
-                    DEPARTMENT_CONFIGS.Engineering
-                  const Icon = deptConfig.icon
+        {/* Empty State */}
+        {jobs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-800/80 bg-[#0d0e15] p-8 sm:p-12 text-center shadow-xl">
+            <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-zinc-800 bg-[#12131b] text-zinc-500 mb-4">
+              <Briefcase className="h-6 w-6 text-zinc-400" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-zinc-200">
+              No Job Posts Yet
+            </h3>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-sm">
+              You haven&apos;t created any job listings yet. Create your first listing to start receiving candidate applications.
+            </p>
+            <Link
+              href="/dashboard/recruiter/jobs/new"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#5d63f6] hover:bg-[#4d53e8] px-4 py-2.5 text-xs sm:text-sm font-medium text-white shadow-md shadow-[#5d63f6]/30 transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Post a New Job</span>
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Mobile / Tablet Card View (< lg screens) */}
+            <div className="space-y-3.5 lg:hidden">
+              {jobs.map((job) => {
+                const dept = job.department || job.category || "Engineering"
+                const deptConfig = getDeptConfig(dept)
+                const Icon = deptConfig.icon
+                const isExpired = job.status === "Expired"
 
-                  return (
-                    <tr
-                      key={job._id}
-                      className="group hover:bg-[#151622]/50 transition-colors"
-                    >
-                      {/* Job Title & Dept */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div
+                return (
+                  <div
+                    key={job._id}
+                    className="rounded-2xl border border-zinc-800/80 bg-[#0d0e15] p-4 sm:p-5 space-y-3.5 shadow-md"
+                  >
+                    {/* Header: Icon + Title & Department + Status Badge */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+                            deptConfig.iconClass
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-zinc-100 text-sm truncate">
+                            {job.title}
+                          </h3>
+                          <p
                             className={cn(
-                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
-                              deptConfig.iconClass
+                              "text-xs font-medium mt-0.5",
+                              deptConfig.textClass
                             )}
                           >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <div className="font-semibold text-zinc-100 group-hover:text-white transition-colors">
-                              {job.title}
-                            </div>
-                            <div
-                              className={cn(
-                                "text-xs font-medium mt-0.5",
-                                deptConfig.textClass
-                              )}
-                            >
-                              {job.department}
-                            </div>
-                          </div>
+                            {dept}
+                          </p>
                         </div>
-                      </td>
-
-                      {/* Company & Location */}
-                      <td className="px-5 py-4">
-                        <div className="font-medium text-zinc-200">
-                          {job.company}
-                        </div>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-400">
-                          {job.isRemote ? (
-                            <>
-                              <Globe className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                              <span>Remote ({job.location})</span>
-                            </>
-                          ) : (
-                            <>
-                              <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                              <span>{job.location}</span>
-                            </>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Type */}
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center rounded-lg border border-zinc-800 bg-[#13141f] px-2.5 py-1 text-xs font-medium text-zinc-300">
-                          {job.jobType}
-                        </span>
-                      </td>
-
-                      {/* Compensation */}
-                      <td className="px-5 py-4 font-medium text-zinc-200 whitespace-nowrap">
-                        {formatCompensation(
-                          job.minSalary,
-                          job.maxSalary,
-                          job.frequency,
-                          job.currency
-                        )}
-                      </td>
-
-                      {/* Applicants */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[#8c84fc] whitespace-nowrap">
-                          <Users className="h-4 w-4 shrink-0 text-[#8c84fc]" />
-                          <span>{job.applicantsCount} Candidates</span>
-                        </div>
-                      </td>
+                      </div>
 
                       {/* Status */}
-                      <td className="px-5 py-4">
-                        {job.status === "Active" ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/60 bg-zinc-800/80 px-2.5 py-1 text-xs font-medium text-zinc-400">
+                      <div className="shrink-0">
+                        {isExpired ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-800/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
                             <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
                             Expired
                           </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                            Active
+                          </span>
                         )}
-                      </td>
+                      </div>
+                    </div>
 
-                      {/* Deadline */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="font-medium text-zinc-200">
+                    {/* Company & Location */}
+                    <div className="text-xs text-zinc-400 flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 border-t border-zinc-800/60">
+                      <span className="font-medium text-zinc-200">
+                        {job.company}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {job.isRemote ? (
+                          <>
+                            <Globe className="h-3 w-3 text-zinc-500 shrink-0" />
+                            <span>Remote ({job.location})</span>
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="h-3 w-3 text-zinc-500 shrink-0" />
+                            <span>{job.location}</span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Metadata Grid */}
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5">
+                        <span className="text-zinc-500 block text-[10px] uppercase font-semibold">
+                          Compensation
+                        </span>
+                        <span className="font-medium text-zinc-200 mt-0.5 block truncate">
+                          {formatCompensation(
+                            job.minSalary,
+                            job.maxSalary,
+                            job.frequency,
+                            job.currency
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5">
+                        <span className="text-zinc-500 block text-[10px] uppercase font-semibold">
+                          Applicants
+                        </span>
+                        <span className="font-medium text-[#8c84fc] mt-0.5 flex items-center gap-1 truncate">
+                          <Users className="h-3.5 w-3.5 shrink-0" />
+                          <span>{job.applicantsCount ?? 0} Candidates</span>
+                        </span>
+                      </div>
+
+                      <div className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5">
+                        <span className="text-zinc-500 block text-[10px] uppercase font-semibold">
+                          Job Type
+                        </span>
+                        <span className="font-medium text-zinc-300 mt-0.5 block truncate">
+                          {job.jobType || "Full-time"}
+                        </span>
+                      </div>
+
+                      <div className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5">
+                        <span className="text-zinc-500 block text-[10px] uppercase font-semibold">
+                          Deadline
+                        </span>
+                        <span className="font-medium text-zinc-200 mt-0.5 block truncate">
                           {formatDeadline(job.deadline)}
-                        </div>
-                        <div className="mt-0.5 text-xs text-zinc-500">
-                          {job.postedAt}
-                        </div>
-                      </td>
+                        </span>
+                      </div>
+                    </div>
 
-                      {/* Actions */}
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/dashboard/recruiter/jobs/${job._id}/edit`}
-                            className="flex items-center gap-1.5 rounded-lg border border-[#5d63f6]/40 bg-[#5d63f6]/10 px-3 py-1.5 text-xs font-medium text-[#a5b4fc] hover:bg-[#5d63f6]/20 transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            <span>Update</span>
-                          </Link>
-                          <button
-                            type="button"
-                            title="Delete job listing"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-[#12131a] text-zinc-400 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            title="More options"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-[#12131a] text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200 transition-colors cursor-pointer"
-                          >
-                            <MoreVertical className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </td>
+                    {/* Actions */}
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800/60">
+                      <Link
+                        href={`/dashboard/recruiter/jobs/${job._id}/edit`}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#5d63f6]/40 bg-[#5d63f6]/10 py-2 text-xs font-medium text-[#a5b4fc] hover:bg-[#5d63f6]/20 transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        <span>Update Listing</span>
+                      </Link>
+                      {/* delete jobs  */}
+                      <DeleteJobsDialog job={job}/>
+                      <button
+                        type="button"
+                        title="More options"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-[#12131a] text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200 transition-colors cursor-pointer shrink-0"
+                      >
+                        <MoreVertical className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop Table View (>= lg screens) */}
+            <div className="hidden lg:block w-full rounded-2xl border border-zinc-800/80 bg-[#0d0e15] shadow-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[960px] text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-800/80 bg-[#12131b]/70 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      <th className="px-5 py-4">Job Title & Dept</th>
+                      <th className="px-5 py-4">Company & Location</th>
+                      <th className="px-5 py-4">Type</th>
+                      <th className="px-5 py-4">Compensation</th>
+                      <th className="px-5 py-4">Applicants</th>
+                      <th className="px-5 py-4">Status</th>
+                      <th className="px-5 py-4">Deadline</th>
+                      <th className="px-5 py-4 text-right">Actions</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60 text-sm">
+                    {jobs.map((job) => {
+                      const dept =
+                        job.department || job.category || "Engineering"
+                      const deptConfig = getDeptConfig(dept)
+                      const Icon = deptConfig.icon
+                      const isExpired = job.status === "Expired"
+
+                      return (
+                        <tr
+                          key={job._id}
+                          className="group hover:bg-[#151622]/50 transition-colors"
+                        >
+                          {/* Job Title & Dept */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn(
+                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+                                  deptConfig.iconClass
+                                )}
+                              >
+                                <Icon className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0 max-w-[200px]">
+                                <div className="font-semibold text-zinc-100 group-hover:text-white transition-colors truncate">
+                                  {job.title}
+                                </div>
+                                <div
+                                  className={cn(
+                                    "text-xs font-medium mt-0.5 truncate",
+                                    deptConfig.textClass
+                                  )}
+                                >
+                                  {dept}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Company & Location */}
+                          <td className="px-5 py-4">
+                            <div className="font-medium text-zinc-200 truncate max-w-[170px]">
+                              {job.company}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-400 truncate max-w-[170px]">
+                              {job.isRemote ? (
+                                <>
+                                  <Globe className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                                  <span className="truncate">
+                                    Remote ({job.location})
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                                  <span className="truncate">{job.location}</span>
+                                </>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Type */}
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center rounded-lg border border-zinc-800 bg-[#13141f] px-2.5 py-1 text-xs font-medium text-zinc-300">
+                              {job.jobType || "Full-time"}
+                            </span>
+                          </td>
+
+                          {/* Compensation */}
+                          <td className="px-5 py-4 font-medium text-zinc-200 whitespace-nowrap">
+                            {formatCompensation(
+                              job.minSalary,
+                              job.maxSalary,
+                              job.frequency,
+                              job.currency
+                            )}
+                          </td>
+
+                          {/* Applicants */}
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[#8c84fc]">
+                              <Users className="h-4 w-4 shrink-0 text-[#8c84fc]" />
+                              <span>{job.applicantsCount ?? 0} Candidates</span>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            {isExpired ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/60 bg-zinc-800/80 px-2.5 py-1 text-xs font-medium text-zinc-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
+                                Expired
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                Active
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Deadline */}
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="font-medium text-zinc-200">
+                              {formatDeadline(job.deadline)}
+                            </div>
+                            <div className="mt-0.5 text-xs text-zinc-500">
+                              {job.postedAt || "Recently"}
+                            </div>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-5 py-4 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/dashboard/recruiter/jobs/${job._id}/edit`}
+                                className="flex items-center gap-1.5 rounded-lg border border-[#5d63f6]/40 bg-[#5d63f6]/10 px-3 py-1.5 text-xs font-medium text-[#a5b4fc] hover:bg-[#5d63f6]/20 transition-colors"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span>Update</span>
+                              </Link>
+                              {/* delete jobs */}
+                              <DeleteJobsDialog job={job}/>
+                              <button
+                                type="button"
+                                title="More options"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-[#12131a] text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200 transition-colors cursor-pointer"
+                              >
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

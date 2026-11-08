@@ -1,4 +1,3 @@
-"use client"
 
 import React from "react"
 import Link from "next/link"
@@ -20,9 +19,10 @@ import {
 
 import type { JobData } from "@/app/dashboard/recruiter/jobs/new/page"
 import { cn } from "@/lib/utils"
+import { getJobs } from "@/lib/api/jobs"
 
 export interface JobPostItem extends JobData {
-  id: string
+  _id: string
   department: string
   currency?: string
   applicantsCount: number
@@ -30,118 +30,6 @@ export interface JobPostItem extends JobData {
   postedAt: string
 }
 
-const DUMMY_JOBS: JobPostItem[] = [
-  {
-    id: "job-1",
-    title: "Frontend Developer",
-    department: "Engineering",
-    category: "Engineering & Tech",
-    company: "HirePulse Network",
-    location: "New York, USA",
-    isRemote: true,
-    jobType: "Full-time",
-    minSalary: "25",
-    maxSalary: "40",
-    frequency: "per hour",
-    currency: "€",
-    applicantsCount: 34,
-    status: "Active",
-    deadline: "2025-05-30",
-    postedAt: "Posted 4d ago",
-    responsibilities:
-      "Develop responsive and accessible web applications using Next.js and Tailwind CSS.",
-    qualifications:
-      "3+ years of experience with React, TypeScript, and modern component systems.",
-  },
-  {
-    id: "job-2",
-    title: "Senior Product Designer",
-    department: "Design",
-    category: "Product & Design",
-    company: "HirePulse Labs",
-    location: "London, UK (Hybrid)",
-    isRemote: false,
-    jobType: "Full-time",
-    minSalary: "90k",
-    maxSalary: "115k",
-    frequency: "per year",
-    currency: "€",
-    applicantsCount: 19,
-    status: "Active",
-    deadline: "2025-06-14",
-    postedAt: "Posted 1w ago",
-    responsibilities:
-      "Lead product design initiatives, establish unified design tokens, and conduct user research.",
-    qualifications:
-      "5+ years product design experience with proven portfolio in SaaS products.",
-  },
-  {
-    id: "job-3",
-    title: "DevOps Specialist",
-    department: "Infrastructure",
-    category: "Engineering & Tech",
-    company: "HirePulse Platform",
-    location: "Berlin, Germany",
-    isRemote: false,
-    jobType: "Full-time",
-    minSalary: "95k",
-    maxSalary: "120k",
-    frequency: "per year",
-    currency: "€",
-    applicantsCount: 12,
-    status: "Active",
-    deadline: "2025-06-30",
-    postedAt: "Posted 2w ago",
-    responsibilities:
-      "Maintain multi-region Kubernetes clusters, CI/CD pipelines, and infrastructure observability.",
-    qualifications:
-      "Proficiency with Docker, Kubernetes, Terraform, and cloud-native monitoring systems.",
-  },
-  {
-    id: "job-4",
-    title: "Product Marketing Lead",
-    department: "Marketing",
-    category: "Marketing & Growth",
-    company: "HirePulse Network",
-    location: "EU/US",
-    isRemote: true,
-    jobType: "Full-time",
-    minSalary: "80k",
-    maxSalary: "105k",
-    frequency: "per year",
-    currency: "€",
-    applicantsCount: 27,
-    status: "Active",
-    deadline: "2025-07-15",
-    postedAt: "Posted 5d ago",
-    responsibilities:
-      "Drive go-to-market strategies, product messaging, launch campaigns, and user acquisition.",
-    qualifications:
-      "Proven track record in B2B growth marketing and data-driven product storytelling.",
-  },
-  {
-    id: "job-5",
-    title: "QA Automation Engineer",
-    department: "Quality",
-    category: "Engineering & Tech",
-    company: "HirePulse Platform",
-    location: "Dublin, Ireland (Hybrid)",
-    isRemote: false,
-    jobType: "Part-time",
-    minSalary: "35",
-    maxSalary: "50",
-    frequency: "per hour",
-    currency: "€",
-    applicantsCount: 8,
-    status: "Expired",
-    deadline: "2025-05-01",
-    postedAt: "Closed",
-    responsibilities:
-      "Design end-to-end automated testing pipelines, regression testing, and quality metrics.",
-    qualifications:
-      "Strong coding abilities with Playwright, Cypress, Jest, and continuous testing workflows.",
-  },
-]
 
 const DEPARTMENT_CONFIGS: Record<
   string,
@@ -215,10 +103,13 @@ function formatDeadline(deadlineStr: string) {
   }
 }
 
-export default function ManageJobsPage() {
+export default async function ManageJobsPage() {
+
+  const jobs: JobPostItem [] = await getJobs()
+
   return (
     <div className="min-h-screen w-full bg-[#090a0f] text-white px-4 py-8 sm:px-8 sm:py-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="mx-auto max-w-8xl space-y-8">
         {/* Top Header & Breadcrumb */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -250,7 +141,7 @@ export default function ManageJobsPage() {
         {/* Responsive Table Container */}
         <div className="w-full rounded-2xl border border-zinc-800/80 bg-[#0d0e15] shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px] text-left border-collapse">
+            <table className="w-full min-w-[1460px] text-left border-collapse">
               <thead>
                 <tr className="border-b border-zinc-800/80 bg-[#12131b]/70 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
                   <th className="px-5 py-4">Job Title & Dept</th>
@@ -264,7 +155,7 @@ export default function ManageJobsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60 text-sm">
-                {DUMMY_JOBS.map((job) => {
+                {jobs.map((job) => {
                   const deptConfig =
                     DEPARTMENT_CONFIGS[job.department] ??
                     DEPARTMENT_CONFIGS.Engineering
@@ -272,7 +163,7 @@ export default function ManageJobsPage() {
 
                   return (
                     <tr
-                      key={job.id}
+                      key={job._id}
                       className="group hover:bg-[#151622]/50 transition-colors"
                     >
                       {/* Job Title & Dept */}
@@ -376,7 +267,7 @@ export default function ManageJobsPage() {
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/dashboard/recruiter/jobs/${job.id}/edit`}
+                            href={`/dashboard/recruiter/jobs/${job._id}/edit`}
                             className="flex items-center gap-1.5 rounded-lg border border-[#5d63f6]/40 bg-[#5d63f6]/10 px-3 py-1.5 text-xs font-medium text-[#a5b4fc] hover:bg-[#5d63f6]/20 transition-colors"
                           >
                             <Pencil className="h-3.5 w-3.5" />

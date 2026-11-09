@@ -25,8 +25,7 @@ export interface JobPostItem extends JobData {
   _id: string
   department?: string
   currency?: string
-  applicantsCount?: number
-  status?: "Active" | "Expired" | "Draft"
+ 
   postedAt?: string
 }
 

@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { createJobs } from "@/lib/actions/jobs"
+import { toast } from "@/components/ui/toast"
+import { useRouter } from "next/navigation"
 
 export const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"] as const
 export type JobType = (typeof JOB_TYPES)[number]
@@ -44,6 +46,8 @@ export interface JobData {
   frequency: string
   responsibilities: string
   qualifications: string
+  applicantsCount?: number
+  status?: "Active" | "Expired" | "Draft"
 }
 
 export default function PostNewJobPage() {
@@ -62,7 +66,7 @@ export default function PostNewJobPage() {
 
   const [responsibilities, setResponsibilities] = useState("")
   const [qualifications, setQualifications] = useState("")
-
+  const router = useRouter()
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault()
     const jobData: JobData = {
@@ -80,7 +84,14 @@ export default function PostNewJobPage() {
       qualifications,
     }
     const result = await createJobs(jobData)
-    console.log("Job created successfully:", result)
+   if(result.insertedId){
+    toast.add({
+      title: "Job created",
+      description: "The job has been successfully added"
+    })
+    router.push("/dashboard/recruiter/jobs")
+
+   }
   }
 
   return (

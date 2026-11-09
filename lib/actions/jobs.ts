@@ -1,5 +1,5 @@
 
-import { JobData } from "@/types/jobs"
+import { JobData, JobPostItem } from "@/types/jobs"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
@@ -22,4 +22,18 @@ export const deleteJob = async(jobId: string)=> {
       method: "DELETE"
    }) 
    return res.json()
+}
+
+
+// update jobs
+export const updateJob = async (job: Partial<JobPostItem> & { _id: string }) => {       
+  // Makes all properties of JobPostItem optional.  
+  const res = await fetch(`${BASE_URL}/jobs/${job._id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(job),
+  })
+  return res.json()
 }

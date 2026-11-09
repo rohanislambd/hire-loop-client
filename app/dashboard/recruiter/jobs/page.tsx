@@ -4,7 +4,6 @@ import {
   Briefcase,
   ChevronRight,
   MoreVertical,
-  Pencil,
   Plus,
   Users,
 } from "lucide-react"
@@ -19,6 +18,7 @@ import {
 } from "@/lib/job-utils"
 import { cn } from "@/lib/utils"
 import { type JobPostItem } from "@/types/jobs"
+import UpdateJobForm from "@/app/components/UpdateJobForm"
 
 // Re-export for backward compatibility
 export type { JobPostItem }
@@ -182,13 +182,7 @@ export default async function ManageJobsPage() {
 
                     {/* Actions */}
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800/60">
-                      <Link
-                        href={`/dashboard/recruiter/jobs/${job._id}/edit`}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#5d63f6]/40 bg-[#5d63f6]/10 py-2 text-xs font-medium text-[#a5b4fc] hover:bg-[#5d63f6]/20 transition-colors"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        <span>Update Listing</span>
-                      </Link>
+                      <UpdateJobForm job={job} className="flex-1 py-2 rounded-xl" />
 
                       <DeleteJobsDialog job={job} />
 
@@ -315,13 +309,7 @@ export default async function ManageJobsPage() {
                           {/* Actions */}
                           <td className="px-5 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-2">
-                              <Link
-                                href={`/dashboard/recruiter/jobs/${job._id}/edit`}
-                                className="flex items-center gap-1.5 rounded-lg border border-[#5d63f6]/40 bg-[#5d63f6]/10 px-3 py-1.5 text-xs font-medium text-[#a5b4fc] hover:bg-[#5d63f6]/20 transition-colors"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                                <span>Update</span>
-                              </Link>
+                              <UpdateJobForm job={job} />
 
                               <DeleteJobsDialog job={job} />
 

@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { JobData } from "../dashboard/recruiter/jobs/new/page"
+import { JobData } from "@/types/jobs"
 import { deleteJob } from "@/lib/actions/jobs"
 import { useState } from "react"
 import { useRouter } from "next/navigation"

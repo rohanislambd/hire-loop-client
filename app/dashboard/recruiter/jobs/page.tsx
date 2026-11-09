@@ -3,122 +3,25 @@ import Link from "next/link"
 import {
   Briefcase,
   ChevronRight,
-  Code2,
-  Globe,
-  MapPin,
-  Megaphone,
   MoreVertical,
-  Palette,
   Pencil,
   Plus,
-  ShieldCheck,
-  Terminal,
   Users,
 } from "lucide-react"
 
-import type { JobData } from "@/app/dashboard/recruiter/jobs/new/page"
-import { getJobs } from "@/lib/api/jobs"
-import { cn } from "@/lib/utils"
 import { DeleteJobsDialog } from "@/app/components/DeleteJobsdialog"
+import { JobLocationBadge, JobStatusBadge } from "@/components/jobs/JobBadges"
+import { getJobs } from "@/lib/api/jobs"
+import {
+  formatCompensation,
+  formatDeadline,
+  getDeptConfig,
+} from "@/lib/job-utils"
+import { cn } from "@/lib/utils"
+import { type JobPostItem } from "@/types/jobs"
 
-export interface JobPostItem extends JobData {
-  _id: string
-  department?: string
-  currency?: string
- 
-  postedAt?: string
-}
-
-const DEPARTMENT_CONFIGS: Record<
-  string,
-  {
-    icon: React.ComponentType<{ className?: string }>
-    iconClass: string
-    textClass: string
-  }
-> = {
-  Engineering: {
-    icon: Code2,
-    iconClass: "border-blue-500/20 bg-blue-500/10 text-blue-400",
-    textClass: "text-blue-400",
-  },
-  Design: {
-    icon: Palette,
-    iconClass: "border-amber-500/20 bg-amber-500/10 text-amber-400",
-    textClass: "text-amber-400",
-  },
-  Infrastructure: {
-    icon: Terminal,
-    iconClass: "border-cyan-500/20 bg-cyan-500/10 text-cyan-400",
-    textClass: "text-cyan-400",
-  },
-  Marketing: {
-    icon: Megaphone,
-    iconClass: "border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-400",
-    textClass: "text-fuchsia-400",
-  },
-  Quality: {
-    icon: ShieldCheck,
-    iconClass: "border-indigo-500/20 bg-indigo-500/10 text-indigo-400",
-    textClass: "text-indigo-400",
-  },
-}
-
-function getDeptConfig(deptName?: string) {
-  if (!deptName) return DEPARTMENT_CONFIGS.Engineering
-  if (DEPARTMENT_CONFIGS[deptName]) return DEPARTMENT_CONFIGS[deptName]
-  const lower = deptName.toLowerCase()
-  if (lower.includes("design")) return DEPARTMENT_CONFIGS.Design
-  if (lower.includes("market")) return DEPARTMENT_CONFIGS.Marketing
-  if (lower.includes("infra") || lower.includes("devops"))
-    return DEPARTMENT_CONFIGS.Infrastructure
-  if (lower.includes("qa") || lower.includes("quality"))
-    return DEPARTMENT_CONFIGS.Quality
-  return DEPARTMENT_CONFIGS.Engineering
-}
-
-function formatCompensation(
-  min?: string,
-  max?: string,
-  frequency?: string,
-  currency = "€"
-) {
-  if (!min && !max) return "Negotiable"
-  const freqLower = (frequency || "year").toLowerCase()
-  let freqShort = "mo"
-  if (freqLower.includes("hour")) freqShort = "hr"
-  else if (freqLower.includes("year")) freqShort = "yr"
-
-  const formatVal = (v?: string) => {
-    if (!v) return ""
-    if (v.toLowerCase().endsWith("k")) return `${currency}${v}`
-    const num = Number(v)
-    if (!isNaN(num) && num >= 1000) {
-      return `${currency}${num / 1000}k`
-    }
-    return `${currency}${v}`
-  }
-
-  if (min && max) {
-    return `${formatVal(min)} - ${formatVal(max)} / ${freqShort}`
-  }
-  return `${formatVal(min || max)} / ${freqShort}`
-}
-
-function formatDeadline(deadlineStr?: string) {
-  if (!deadlineStr) return "Open until filled"
-  try {
-    const d = new Date(deadlineStr)
-    if (isNaN(d.getTime())) return deadlineStr
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    })
-  } catch {
-    return deadlineStr
-  }
-}
+// Re-export for backward compatibility
+export type { JobPostItem }
 
 export default async function ManageJobsPage() {
   const jobs: JobPostItem[] = await getJobs()
@@ -184,7 +87,6 @@ export default async function ManageJobsPage() {
                 const dept = job.department || job.category || "Engineering"
                 const deptConfig = getDeptConfig(dept)
                 const Icon = deptConfig.icon
-                const isExpired = job.status === "Expired"
 
                 return (
                   <div
@@ -217,19 +119,8 @@ export default async function ManageJobsPage() {
                         </div>
                       </div>
 
-                      {/* Status */}
                       <div className="shrink-0">
-                        {isExpired ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-800/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
-                            Expired
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                            Active
-                          </span>
-                        )}
+                        <JobStatusBadge status={job.status} />
                       </div>
                     </div>
 
@@ -238,19 +129,10 @@ export default async function ManageJobsPage() {
                       <span className="font-medium text-zinc-200">
                         {job.company}
                       </span>
-                      <span className="flex items-center gap-1">
-                        {job.isRemote ? (
-                          <>
-                            <Globe className="h-3 w-3 text-zinc-500 shrink-0" />
-                            <span>Remote ({job.location})</span>
-                          </>
-                        ) : (
-                          <>
-                            <MapPin className="h-3 w-3 text-zinc-500 shrink-0" />
-                            <span>{job.location}</span>
-                          </>
-                        )}
-                      </span>
+                      <JobLocationBadge
+                        isRemote={job.isRemote}
+                        location={job.location}
+                      />
                     </div>
 
                     {/* Metadata Grid */}
@@ -307,8 +189,9 @@ export default async function ManageJobsPage() {
                         <Pencil className="h-3.5 w-3.5" />
                         <span>Update Listing</span>
                       </Link>
-                      {/* delete jobs  */}
-                      <DeleteJobsDialog job={job}/>
+
+                      <DeleteJobsDialog job={job} />
+
                       <button
                         type="button"
                         title="More options"
@@ -344,7 +227,6 @@ export default async function ManageJobsPage() {
                         job.department || job.category || "Engineering"
                       const deptConfig = getDeptConfig(dept)
                       const Icon = deptConfig.icon
-                      const isExpired = job.status === "Expired"
 
                       return (
                         <tr
@@ -383,21 +265,11 @@ export default async function ManageJobsPage() {
                             <div className="font-medium text-zinc-200 truncate max-w-[170px]">
                               {job.company}
                             </div>
-                            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-400 truncate max-w-[170px]">
-                              {job.isRemote ? (
-                                <>
-                                  <Globe className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                                  <span className="truncate">
-                                    Remote ({job.location})
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                                  <span className="truncate">{job.location}</span>
-                                </>
-                              )}
-                            </div>
+                            <JobLocationBadge
+                              isRemote={job.isRemote}
+                              location={job.location}
+                              className="mt-0.5 max-w-[170px]"
+                            />
                           </td>
 
                           {/* Type */}
@@ -427,17 +299,7 @@ export default async function ManageJobsPage() {
 
                           {/* Status */}
                           <td className="px-5 py-4 whitespace-nowrap">
-                            {isExpired ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/60 bg-zinc-800/80 px-2.5 py-1 text-xs font-medium text-zinc-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
-                                Expired
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                Active
-                              </span>
-                            )}
+                            <JobStatusBadge status={job.status} />
                           </td>
 
                           {/* Deadline */}
@@ -460,8 +322,9 @@ export default async function ManageJobsPage() {
                                 <Pencil className="h-3.5 w-3.5" />
                                 <span>Update</span>
                               </Link>
-                              {/* delete jobs */}
-                              <DeleteJobsDialog job={job}/>
+
+                              <DeleteJobsDialog job={job} />
+
                               <button
                                 type="button"
                                 title="More options"

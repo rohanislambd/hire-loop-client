@@ -1,5 +1,5 @@
 
-import { JobData } from "@/app/dashboard/recruiter/jobs/new/page"
+import { JobData } from "@/types/jobs"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 

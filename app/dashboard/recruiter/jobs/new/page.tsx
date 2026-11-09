@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowRight,
   Building2,
@@ -12,42 +13,31 @@ import {
   MapPin,
 } from "lucide-react"
 
+import {
+  FormField,
+  FormSectionHeader,
+  InputWrapper,
+} from "@/components/jobs/form-elements"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
-import { createJobs } from "@/lib/actions/jobs"
 import { toast } from "@/components/ui/toast"
-import { useRouter } from "next/navigation"
+import { createJobs } from "@/lib/actions/jobs"
+import { cn } from "@/lib/utils"
+import {
+  JOB_CATEGORIES,
+  JOB_TYPES,
+  SALARY_FREQUENCIES,
+  type JobData,
+  type JobType,
+} from "@/types/jobs"
 
-export const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"] as const
-export type JobType = (typeof JOB_TYPES)[number]
-
-export const JOB_CATEGORIES = [
-  "Engineering & Tech",
-  "Product & Design",
-  "Marketing & Growth",
-  "Operations & Finance",
-  "Sales & Business",
-]
-
-export const SALARY_FREQUENCIES = ["per hour", "per month", "per year"]
-
-export interface JobData {
-  _id?: string
-  title: string
-  company: string
-  category: string
-  jobType: JobType | ""
-  isRemote: boolean
-  location: string
-  deadline: string
-  minSalary: string
-  maxSalary: string
-  frequency: string
-  responsibilities: string
-  qualifications: string
-  applicantsCount?: number
-  status?: "Active" | "Expired" | "Draft"
+// Re-export shared types/constants for zero-breaking-change backward compatibility
+export {
+  JOB_CATEGORIES,
+  JOB_TYPES,
+  SALARY_FREQUENCIES,
+  type JobData,
+  type JobType,
 }
 
 export default function PostNewJobPage() {
@@ -61,12 +51,12 @@ export default function PostNewJobPage() {
   const [deadline, setDeadline] = useState("")
   const [minSalary, setMinSalary] = useState("")
   const [maxSalary, setMaxSalary] = useState("")
-
   const [frequency, setFrequency] = useState("")
 
   const [responsibilities, setResponsibilities] = useState("")
   const [qualifications, setQualifications] = useState("")
   const router = useRouter()
+
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault()
     const jobData: JobData = {
@@ -83,15 +73,15 @@ export default function PostNewJobPage() {
       responsibilities,
       qualifications,
     }
-    const result = await createJobs(jobData)
-   if(result.insertedId){
-    toast.add({
-      title: "Job created",
-      description: "The job has been successfully added"
-    })
-    router.push("/dashboard/recruiter/jobs")
 
-   }
+    const result = await createJobs(jobData)
+    if (result?.insertedId) {
+      toast.add({
+        title: "Job created",
+        description: "The job has been successfully added",
+      })
+      router.push("/dashboard/recruiter/jobs")
+    }
   }
 
   return (
@@ -123,23 +113,12 @@ export default function PostNewJobPage() {
         <form onSubmit={handlePublish} className="space-y-8">
           {/* SECTION 1: Basic Information */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#5d63f6]" />
-              <h2 className="text-sm font-semibold tracking-wide text-zinc-200">
-                1. Basic Information
-              </h2>
-            </div>
+            <FormSectionHeader title="1. Basic Information" />
 
             <div className="space-y-4">
               {/* Job Title */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="jobTitle"
-                  className="text-xs font-medium text-zinc-300"
-                >
-                  Job Title <span className="text-[#8c84fc]">*</span>
-                </label>
-                <div className="rounded-xl border border-zinc-800/80 bg-[#12131a] px-4 py-2.5 transition-colors focus-within:border-zinc-700">
+              <FormField label="Job Title" required htmlFor="jobTitle">
+                <InputWrapper>
                   <input
                     id="jobTitle"
                     type="text"
@@ -149,20 +128,14 @@ export default function PostNewJobPage() {
                     placeholder="e.g. Frontend Developer"
                     className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 outline-none"
                   />
-                </div>
-              </div>
+                </InputWrapper>
+              </FormField>
 
               {/* Company Name & Job Category */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Company Name */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="companyName"
-                    className="text-xs font-medium text-zinc-300"
-                  >
-                    Company Name <span className="text-[#8c84fc]">*</span>
-                  </label>
-                  <div className="flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
+                <FormField label="Company Name" required htmlFor="companyName">
+                  <InputWrapper>
                     <Building2 className="h-4 w-4 text-zinc-500 shrink-0" />
                     <input
                       id="companyName"
@@ -173,17 +146,11 @@ export default function PostNewJobPage() {
                       placeholder="Company Name"
                       className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 outline-none"
                     />
-                  </div>
-                </div>
+                  </InputWrapper>
+                </FormField>
 
                 {/* Job Category */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="jobCategory"
-                    className="text-xs font-medium text-zinc-300"
-                  >
-                    Job Category <span className="text-[#8c84fc]">*</span>
-                  </label>
+                <FormField label="Job Category" required htmlFor="jobCategory">
                   <div className="relative flex items-center rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
                     <select
                       id="jobCategory"
@@ -210,14 +177,11 @@ export default function PostNewJobPage() {
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3.5 h-4 w-4 text-zinc-500" />
                   </div>
-                </div>
+                </FormField>
               </div>
 
               {/* Job Type Selector */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">
-                  Job Type <span className="text-[#8c84fc]">*</span>
-                </label>
+              <FormField label="Job Type" required>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {JOB_TYPES.map((type) => {
                     const isSelected = jobType === type
@@ -238,18 +202,13 @@ export default function PostNewJobPage() {
                     )
                   })}
                 </div>
-              </div>
+              </FormField>
             </div>
           </section>
 
           {/* SECTION 2: Location, Compensation & Timeline */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#5d63f6]" />
-              <h2 className="text-sm font-semibold tracking-wide text-zinc-200">
-                2. Location, Compensation & Timeline
-              </h2>
-            </div>
+            <FormSectionHeader title="2. Location, Compensation & Timeline" />
 
             <div className="space-y-4">
               {/* Remote Work Allowed Switch Banner */}
@@ -278,19 +237,12 @@ export default function PostNewJobPage() {
               {/* Location & Application Deadline */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Location */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="jobLocation"
-                      className="text-xs font-medium text-zinc-300"
-                    >
-                      Job Location (location)
-                    </label>
-                    <span className="text-[11px] text-zinc-500 font-medium">
-                      Required
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
+                <FormField
+                  label="Job Location (location)"
+                  htmlFor="jobLocation"
+                  hint="Required"
+                >
+                  <InputWrapper>
                     <MapPin className="h-4 w-4 text-zinc-500 shrink-0" />
                     <input
                       id="jobLocation"
@@ -301,18 +253,15 @@ export default function PostNewJobPage() {
                       placeholder="e.g. New York, USA"
                       className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 outline-none"
                     />
-                  </div>
-                </div>
+                  </InputWrapper>
+                </FormField>
 
                 {/* Application Deadline */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="applicationDeadline"
-                    className="text-xs font-medium text-zinc-300"
-                  >
-                    Application Deadline (deadline)
-                  </label>
-                  <div className="flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
+                <FormField
+                  label="Application Deadline (deadline)"
+                  htmlFor="applicationDeadline"
+                >
+                  <InputWrapper>
                     <Calendar className="h-4 w-4 text-zinc-500 shrink-0" />
                     <input
                       id="applicationDeadline"
@@ -321,22 +270,15 @@ export default function PostNewJobPage() {
                       onChange={(e) => setDeadline(e.target.value)}
                       className="w-full bg-transparent text-sm text-zinc-200 outline-none [color-scheme:dark]"
                     />
-                  </div>
-                </div>
+                  </InputWrapper>
+                </FormField>
               </div>
 
               {/* Salary & Frequency */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {/* Min Salary */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="minSalary"
-                    className="text-xs font-medium text-zinc-300"
-                  >
-                    Min Salary / Rate
-                  </label>
-                  <div className="flex items-center gap-2 rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
-                  
+                <FormField label="Min Salary / Rate" htmlFor="minSalary">
+                  <InputWrapper>
                     <input
                       id="minSalary"
                       type="number"
@@ -345,19 +287,12 @@ export default function PostNewJobPage() {
                       placeholder="e.g. 25"
                       className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 outline-none"
                     />
-                  </div>
-                </div>
+                  </InputWrapper>
+                </FormField>
 
                 {/* Max Salary */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="maxSalary"
-                    className="text-xs font-medium text-zinc-300"
-                  >
-                    Max Salary / Rate
-                  </label>
-                  <div className="flex items-center gap-2 rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
-                  
+                <FormField label="Max Salary / Rate" htmlFor="maxSalary">
+                  <InputWrapper>
                     <input
                       id="maxSalary"
                       type="number"
@@ -366,17 +301,11 @@ export default function PostNewJobPage() {
                       placeholder="e.g. 40"
                       className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 outline-none"
                     />
-                  </div>
-                </div>
+                  </InputWrapper>
+                </FormField>
 
                 {/* Frequency */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="salaryFrequency"
-                    className="text-xs font-medium text-zinc-300"
-                  >
-                    Frequency
-                  </label>
+                <FormField label="Frequency" htmlFor="salaryFrequency">
                   <div className="relative flex items-center rounded-xl border border-zinc-800/80 bg-[#12131a] px-3.5 py-2.5 transition-colors focus-within:border-zinc-700">
                     <select
                       id="salaryFrequency"
@@ -402,29 +331,22 @@ export default function PostNewJobPage() {
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3.5 h-4 w-4 text-zinc-500" />
                   </div>
-                </div>
+                </FormField>
               </div>
             </div>
           </section>
 
           {/* SECTION 3: Responsibilities & Requirements */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#5d63f6]" />
-              <h2 className="text-sm font-semibold tracking-wide text-zinc-200">
-                3. Responsibilities & Requirements
-              </h2>
-            </div>
+            <FormSectionHeader title="3. Responsibilities & Requirements" />
 
             <div className="space-y-4">
               {/* Key Responsibilities */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="keyResponsibilities"
-                  className="text-xs font-medium text-zinc-300"
-                >
-                  Key Responsibilities <span className="text-[#8c84fc]">*</span>
-                </label>
+              <FormField
+                label="Key Responsibilities"
+                required
+                htmlFor="keyResponsibilities"
+              >
                 <div className="rounded-xl border border-zinc-800/80 bg-[#12131a] p-3.5 transition-colors focus-within:border-zinc-700">
                   <textarea
                     id="keyResponsibilities"
@@ -436,17 +358,14 @@ export default function PostNewJobPage() {
                     placeholder="List the primary daily tasks, responsibilities, and expected impact..."
                   />
                 </div>
-              </div>
+              </FormField>
 
               {/* Qualifications & Requirements */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="qualifications"
-                  className="text-xs font-medium text-zinc-300"
-                >
-                  Qualifications & Requirements{" "}
-                  <span className="text-[#8c84fc]">*</span>
-                </label>
+              <FormField
+                label="Qualifications & Requirements"
+                required
+                htmlFor="qualifications"
+              >
                 <div className="rounded-xl border border-zinc-800/80 bg-[#12131a] p-3.5 transition-colors focus-within:border-zinc-700">
                   <textarea
                     id="qualifications"
@@ -458,7 +377,7 @@ export default function PostNewJobPage() {
                     placeholder="• Required skills and years of experience&#10;• Education or domain expertise&#10;• Nice-to-have qualifications"
                   />
                 </div>
-              </div>
+              </FormField>
             </div>
           </section>
 

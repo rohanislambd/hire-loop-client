@@ -1,7 +1,7 @@
 
-export const getJobs = async () => {
+export const getJobs = async (query = '') => {
    try{
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs?${query}`)
         if(!res.ok){
             return[];
         }

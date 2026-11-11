@@ -20,7 +20,7 @@ export default function Navbar() {
   const { data: session } = authClient.useSession()
 
   const NAV_LINKS = [
-  { name: "Browse Jobs", href: "/jobs" },
+  { name: "Browse Jobs", href: "/browse-job" },
   { name: "Company", href: "/company" },
   { name: "Pricing", href: "/pricing" },
   { name: "Dashboard", href: `/dashboard/${session?.user?.role  || "seeker"}` },

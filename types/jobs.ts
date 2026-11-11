@@ -1,4 +1,4 @@
-export const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"] as const
+export const JOB_TYPES = ["full-time", "part-time", "contract", "Internship"] as const
 export type JobType = (typeof JOB_TYPES)[number]
 
 export const JOB_CATEGORIES = [

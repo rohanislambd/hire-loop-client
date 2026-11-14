@@ -23,7 +23,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { getJobById } from "@/lib/api/jobs"
-import type { JobPostItem } from "@/types/jobs"
+import type { JobPostItem, JobApplication } from "@/types/jobs"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
@@ -59,14 +59,18 @@ export default function JobDetailsPage({ params }: PageProps) {
     if (!user) {
       router.push(`/sign-in?redirectTo=/browse-job/${id}`)
     } else if (user.role === "seeker") {
-      // save the applicaion to the database
-      //TODO: only send jobId and userId or email address for the application
-      const application = {
+      const application: JobApplication = {
         jobId: id,
         userId: user.id,
+        userName: user.name || "",
         email: user.email,
         jobTitle: job.title,
         companyName: job.company,
+        location: job.location,
+        salaryRange: job.salaryRange,
+        jobType: job.jobType,
+        status: "Submitted",
+        appliedAt: new Date().toISOString(),
       }
       const result  = await applyToAJob(application)
       if(result.insertedId){

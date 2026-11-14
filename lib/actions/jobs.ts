@@ -1,5 +1,6 @@
 
 import { JobData, JobPostItem } from "@/types/jobs"
+import type { JobApplication } from "@/types/applications"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
@@ -40,16 +41,33 @@ export const updateJob = async (job: Partial<JobPostItem> & { _id: string }) => 
 
 
 
-//application post 
-
-export async function applyToAJob(data) {
+// application post
+export async function applyToAJob(data: JobApplication) {
   const response = await fetch(`${BASE_URL}/applications`, {
     method: "POST",
-    headers:{
-      'Content-Type': 'application/json'
+    headers: {
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   })
 
   return response.json()
 }
+
+
+// get application data
+export const getApplications = async (query = ""): Promise<JobApplication[]> => {
+  try {
+    const res = await fetch(`${BASE_URL}/applications?${query}`, {
+      cache: "no-store",
+    })
+    if (!res.ok) {
+      return []
+    }
+    return res.json()
+  } catch (error) {
+    console.log("getApplications error", error)
+    return []
+  }
+}
+

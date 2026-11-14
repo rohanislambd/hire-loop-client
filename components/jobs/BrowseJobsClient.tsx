@@ -17,6 +17,7 @@ import {
   JOB_TYPES,
   type JobPostItem,
 } from "@/types/jobs"
+import Link from "next/link"
 
 interface BrowseJobsClientProps {
   jobs: JobPostItem[]
@@ -229,9 +230,11 @@ export function BrowseJobsClient({ jobs }: BrowseJobsClientProps) {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
                 {jobs.map((job) => (
-                  <BrowseJobCard key={job._id} job={job} />
+                 <Link key={job._id}  href={`/browse-job/${job._id}`}>
+                    <BrowseJobCard job={job} />
+                 </Link>
                 ))}
               </div>
             )}

@@ -8,13 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { authClient } from '@/lib/auth-client';
+import { useSearchParams } from 'next/navigation';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-
+ const searchParams = useSearchParams();
+ const redirectTo = searchParams.get("redirectTo") ??  "/"
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = {
@@ -24,7 +26,7 @@ export default function SignInPage() {
     // console.log('Sign In Form Data:', formData);
     const { data, error } = await authClient.signIn.email({
         ...formData,
-        callbackURL: "/",
+        callbackURL: redirectTo,
     })
   };
 

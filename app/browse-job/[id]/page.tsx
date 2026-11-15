@@ -27,7 +27,7 @@ import type { JobPostItem, JobApplication } from "@/types/jobs"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
-import { applyToAJob } from "@/lib/actions/jobs"
+import { applyToAJob, getApplicationsCount } from "@/lib/actions/jobs"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -59,23 +59,34 @@ export default function JobDetailsPage({ params }: PageProps) {
     if (!user) {
       router.push(`/sign-in?redirectTo=/browse-job/${id}`)
     } else if (user.role === "seeker") {
-      const application: JobApplication = {
-        jobId: id,
-        userId: user.id,
-        userName: user.name || "",
-        email: user.email,
-        jobTitle: job.title,
-        companyName: job.company,
-        location: job.location,
-        salaryRange: job.salaryRange,
-        jobType: job.jobType,
-        status: "Submitted",
-        appliedAt: new Date().toISOString(),
-      }
-      const result  = await applyToAJob(application)
-      if(result.insertedId){
-        console.log('Application submitted succesfully');
-        router.push("/browse-job")
+      // number of jobs applied  by this users
+
+      const countResult = await getApplicationsCount(`applicantId=${user.id}`)
+
+      //less more than 10 and not premium user
+      if (countResult.count >= 10) {
+        // redirect to the payment page
+        router.push("/payment")
+        return
+      } else {
+        const application: JobApplication = {
+          jobId: id,
+          userId: user.id,
+          userName: user.name || "",
+          email: user.email,
+          jobTitle: job.title,
+          companyName: job.company,
+          location: job.location,
+          salaryRange: job.salaryRange,
+          jobType: job.jobType,
+          status: "Submitted",
+          appliedAt: new Date().toISOString(),
+        }
+        const result = await applyToAJob(application)
+        if (result.insertedId) {
+          console.log("Application submitted succesfully")
+          router.push("/browse-job")
+        }
       }
     } else {
       console.log("user is not a job seeker")

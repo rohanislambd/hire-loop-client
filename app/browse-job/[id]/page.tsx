@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { applyToAJob, getApplicationsCount } from "@/lib/actions/jobs"
+import { toast } from "@/components/ui/toast"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -64,7 +65,7 @@ export default function JobDetailsPage({ params }: PageProps) {
       const countResult = await getApplicationsCount(`applicantId=${user.id}`)
 
       //less more than 10 and not premium user
-      if (countResult.count >= 10) {
+      if (countResult.count >= 3) {
         // redirect to the payment page
         router.push("/payment")
         return
@@ -85,6 +86,10 @@ export default function JobDetailsPage({ params }: PageProps) {
         const result = await applyToAJob(application)
         if (result.insertedId) {
           console.log("Application submitted succesfully")
+          toast.add({
+            title:"Application submitted",
+            description: "Your application has been submitted successfully"
+          })
           router.push("/browse-job")
         }
       }

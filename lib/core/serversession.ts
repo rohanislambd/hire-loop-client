@@ -26,6 +26,9 @@ export const authFetch = async (api: string) => {
             authorization: `Bearer ${token}`
         }
       });
+      if(res.status === 401 || res.status === 403){
+        redirect("/unauthorized")
+     }
       return res
 }
 //common structure token send 
@@ -39,6 +42,9 @@ export const protectedMutation = async (api:string, method:string, data?: unknow
         },
         body: data ? JSON.stringify(data) : null
      })
+     if(res.status === 401 || res.status === 403){
+        redirect("/unauthorized")
+     }
      return res;
 }
 

@@ -13,6 +13,7 @@ import {
   MapPin,
   ExternalLink,
   ChevronDown,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,7 @@ import { toast } from "@/components/ui/toast"
 import type { JobApplication, ApplicationStatus } from "@/types/applications"
 import type { JobPostItem } from "@/types/jobs"
 import { cn } from "@/lib/utils"
+import { updateApplicationStatus } from "@/lib/actions/applications"
 
 const RECRUITER_STATUSES: ApplicationStatus[] = [
   "Submitted",
@@ -97,28 +99,79 @@ export function JobApplicationsTable({
   const [statusFilter, setStatusFilter] = useState<string>("All")
   const [selectedApplicant, setSelectedApplicant] = useState<JobApplication | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
-  // Handle local status update with instant UI feedback
-  const handleStatusChange = (appId: string | undefined, newStatus: ApplicationStatus) => {
+  // Handle status update via API call with optimistic UI update and error rollback
+  const handleStatusChange = async (
+    appId: string | undefined,
+    newStatus: ApplicationStatus
+  ) => {
     if (!appId) return
 
+    // Find previous status for rollback if API fails
+    const currentApp = applications.find(
+      (app) => (app._id || app.jobId) === appId
+    )
+    const previousStatus = currentApp?.status
+    if (previousStatus === newStatus) return
+
+    // Optimistically update local state immediately
     setApplications((prev) =>
       prev.map((app) =>
         (app._id || app.jobId) === appId ? { ...app, status: newStatus } : app
       )
     )
 
-    if (selectedApplicant && (selectedApplicant._id || selectedApplicant.jobId) === appId) {
-      setSelectedApplicant((prev) => (prev ? { ...prev, status: newStatus } : null))
+    if (
+      selectedApplicant &&
+      (selectedApplicant._id || selectedApplicant.jobId) === appId
+    ) {
+      setSelectedApplicant((prev) =>
+        prev ? { ...prev, status: newStatus } : null
+      )
     }
 
-    toast.add({
-      title: "Status Updated",
-      description: `Applicant status set to "${newStatus}"`,
-      type: "success",
-    })
+    setUpdatingId(appId)
 
-    // TODO: Connect database status update PATCH/POST API here later
+    try {
+      const result = await updateApplicationStatus(appId, { status: newStatus })
+      console.log("Application status update response:", result)
+
+      toast.add({
+        title: "Status Updated",
+        description: `Applicant status set to "${newStatus}"`,
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Failed to update status on server:", error)
+
+      // Rollback to previous status if server request fails
+      if (previousStatus) {
+        setApplications((prev) =>
+          prev.map((app) =>
+            (app._id || app.jobId) === appId
+              ? { ...app, status: previousStatus }
+              : app
+          )
+        )
+        if (
+          selectedApplicant &&
+          (selectedApplicant._id || selectedApplicant.jobId) === appId
+        ) {
+          setSelectedApplicant((prev) =>
+            prev ? { ...prev, status: previousStatus } : null
+          )
+        }
+      }
+
+      toast.add({
+        title: "Update Failed",
+        description: "Failed to update application status. Please try again.",
+        type: "error",
+      })
+    } finally {
+      setUpdatingId(null)
+    }
   }
 
   // Filtered applications
@@ -379,11 +432,15 @@ export function JobApplicationsTable({
                         <div className="relative inline-block w-44">
                           <select
                             value={app.status}
+                            disabled={updatingId === appId}
                             onChange={(e) =>
                               handleStatusChange(appId, e.target.value as ApplicationStatus)
                             }
                             aria-label={`Change status for ${candidateName}`}
-                            className="w-full appearance-none rounded-xl border border-zinc-800 bg-[#12131b] px-3 py-1.5 pr-8 text-xs font-medium text-zinc-200 hover:border-zinc-700 focus:outline-none focus:border-[#5d63f6] transition-colors cursor-pointer"
+                            className={cn(
+                              "w-full appearance-none rounded-xl border border-zinc-800 bg-[#12131b] px-3 py-1.5 pr-8 text-xs font-medium text-zinc-200 hover:border-zinc-700 focus:outline-none focus:border-[#5d63f6] transition-colors cursor-pointer",
+                              updatingId === appId && "opacity-60 cursor-not-allowed"
+                            )}
                           >
                             {RECRUITER_STATUSES.map((st) => (
                               <option key={st} value={st} className="bg-[#12131b] text-white">
@@ -391,7 +448,11 @@ export function JobApplicationsTable({
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                          {updatingId === appId ? (
+                            <Loader2 className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8c84fc] animate-spin" />
+                          ) : (
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                          )}
                         </div>
                       </td>
 
@@ -505,6 +566,7 @@ export function JobApplicationsTable({
                 <div className="relative">
                   <select
                     id="modal-status-select"
+                    disabled={updatingId === (selectedApplicant._id || selectedApplicant.jobId)}
                     value={selectedApplicant.status}
                     onChange={(e) =>
                       handleStatusChange(
@@ -512,7 +574,11 @@ export function JobApplicationsTable({
                         e.target.value as ApplicationStatus
                       )
                     }
-                    className="w-full appearance-none rounded-xl border border-zinc-800 bg-[#12131b] px-3.5 py-2 pr-8 text-xs font-medium text-zinc-200 hover:border-zinc-700 focus:outline-none focus:border-[#5d63f6] transition-colors cursor-pointer"
+                    className={cn(
+                      "w-full appearance-none rounded-xl border border-zinc-800 bg-[#12131b] px-3.5 py-2 pr-8 text-xs font-medium text-zinc-200 hover:border-zinc-700 focus:outline-none focus:border-[#5d63f6] transition-colors cursor-pointer",
+                      updatingId === (selectedApplicant._id || selectedApplicant.jobId) &&
+                        "opacity-60 cursor-not-allowed"
+                    )}
                   >
                     {RECRUITER_STATUSES.map((st) => (
                       <option key={st} value={st} className="bg-[#12131b] text-white">
@@ -520,7 +586,11 @@ export function JobApplicationsTable({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  {updatingId === (selectedApplicant._id || selectedApplicant.jobId) ? (
+                    <Loader2 className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8c84fc] animate-spin" />
+                  ) : (
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  )}
                 </div>
               </div>
 

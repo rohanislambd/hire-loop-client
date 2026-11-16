@@ -19,12 +19,16 @@ import {
 import { cn } from "@/lib/utils"
 import { type JobPostItem } from "@/types/jobs"
 import UpdateJobForm from "@/app/components/UpdateJobForm"
+import { getSessionFromServer } from "@/lib/core/serversession"
 
 // Re-export for backward compatibility
 export type { JobPostItem }
 
 export default async function ManageJobsPage() {
-  const jobs: JobPostItem[] = await getJobs()
+ 
+  const session = await getSessionFromServer()
+
+  const jobs: JobPostItem[] = await getJobs(`recruiterId=${session?.user?.id}`)
 
   return (
     <div className="min-h-screen w-full bg-[#090a0f] text-white px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">

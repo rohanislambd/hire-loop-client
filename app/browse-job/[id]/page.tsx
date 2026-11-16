@@ -93,8 +93,9 @@ export default function JobDetailsPage({ params }: PageProps) {
         if (result.insertedId) {
           console.log("Application submitted succesfully")
           toast.add({
-            title:"Application submitted",
-            description: "Your application has been submitted successfully"
+            title: "Application submitted",
+            description: "Your application has been submitted successfully",
+            type: "success",
           })
           router.push("/browse-job")
         }

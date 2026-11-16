@@ -30,6 +30,7 @@ import {
   type JobData,
   type JobType,
 } from "@/types/jobs"
+import { authClient } from "@/lib/auth-client"
 
 // Re-export shared types/constants for zero-breaking-change backward compatibility
 export {
@@ -56,11 +57,12 @@ export default function PostNewJobPage() {
   const [responsibilities, setResponsibilities] = useState("")
   const [qualifications, setQualifications] = useState("")
   const router = useRouter()
-
+  const {data:session} = authClient.useSession()
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault()
     const jobData: JobData = {
       title: jobTitle,
+      recruiterId:session?.user.id ?? "",
       company: companyName,
       category,
       jobType,

@@ -1,16 +1,13 @@
+"use server"
 import { JobData, JobPostItem } from "@/types/jobs"
 import type { JobApplication } from "@/types/applications"
+import { protectedMutation } from "../core/serversession"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export const createJobs = async (data: JobData) => {
-  const res = await fetch(`${BASE_URL}/jobs`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
+  const api = `${BASE_URL}/jobs`;
+  const res = await  protectedMutation(api, "POST", data)
   return res.json()
 }
 
@@ -40,15 +37,9 @@ export const updateJob = async (
 
 // application post
 export async function applyToAJob(data: JobApplication) {
-  const response = await fetch(`${BASE_URL}/applications`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  return response.json()
+   const api =`${BASE_URL}/applications`;
+   const res = await protectedMutation(api, "POST", data )
+  return res.json()
 }
 
 

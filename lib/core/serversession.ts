@@ -28,6 +28,19 @@ export const authFetch = async (api: string) => {
       });
       return res
 }
+//common structure token send 
+export const protectedMutation = async (api:string, method:string, data?: unknown) => {
+     const token =await getToken();
+     const res = await fetch(api,{
+        method: method,
+        headers: {
+             "Content-Type": "application/json",
+              authorization: `Bearer ${token}`
+        },
+        body: data ? JSON.stringify(data) : null
+     })
+     return res;
+}
 
 export const requireRole = async (role: string) => {
        const session = await getSessionFromServer();

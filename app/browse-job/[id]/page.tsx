@@ -90,6 +90,7 @@ export default function JobDetailsPage({ params }: PageProps) {
           appliedAt: new Date().toISOString(),
         }
         const result = await applyToAJob(application)
+        console.log('job application result', result);
         if (result.insertedId) {
           console.log("Application submitted succesfully")
           toast.add({

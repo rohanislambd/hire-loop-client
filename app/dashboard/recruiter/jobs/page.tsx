@@ -155,15 +155,23 @@ export default async function ManageJobsPage() {
                         </span>
                       </div>
 
-                      <div className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5">
+                      <Link
+                        href={`/dashboard/recruiter/jobs/${job._id}/applications`}
+                        className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5 hover:border-[#8c84fc]/50 transition-colors block group cursor-pointer"
+                      >
                         <span className="text-zinc-500 block text-[10px] uppercase font-semibold">
                           Applicants
                         </span>
-                        <span className="font-medium text-[#8c84fc] mt-0.5 flex items-center gap-1 truncate">
-                          <Users className="h-3.5 w-3.5 shrink-0" />
-                          <span>{job.applicantsCount ?? 0} Candidates</span>
+                        <span className="font-medium text-[#8c84fc] mt-0.5 flex items-center justify-between gap-1 truncate">
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3.5 w-3.5 shrink-0" />
+                            <span>{job.applicantsCount ?? 0} Candidates</span>
+                          </span>
+                          <span className="text-[10px] text-zinc-400 group-hover:text-white underline">
+                            View
+                          </span>
                         </span>
-                      </div>
+                      </Link>
 
                       <div className="rounded-xl bg-[#12131b] border border-zinc-800/60 p-2.5">
                         <span className="text-zinc-500 block text-[10px] uppercase font-semibold">
@@ -185,7 +193,16 @@ export default async function ManageJobsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800/60">
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800/60 flex-wrap">
+                      <Link
+                        href={`/dashboard/recruiter/jobs/${job._id}/applications`}
+                        className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-[#12131b] hover:bg-[#1a1b2b] hover:border-[#8c84fc]/50 text-xs font-medium text-zinc-300 hover:text-white px-3 py-2 transition-colors shrink-0"
+                        title="View Applications"
+                      >
+                        <Users className="h-3.5 w-3.5 text-[#8c84fc]" />
+                        <span>Applications</span>
+                      </Link>
+
                       <UpdateJobForm job={job} className="flex-1 py-2 rounded-xl" />
 
                       <DeleteJobsDialog job={job} />
@@ -289,10 +306,14 @@ export default async function ManageJobsPage() {
 
                           {/* Applicants */}
                           <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[#8c84fc]">
+                            <Link
+                              href={`/dashboard/recruiter/jobs/${job._id}/applications`}
+                              className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#8c84fc] hover:text-[#a59efc] hover:underline transition-colors"
+                              title="View candidate applications"
+                            >
                               <Users className="h-4 w-4 shrink-0 text-[#8c84fc]" />
                               <span>{job.applicantsCount ?? 0} Candidates</span>
-                            </div>
+                            </Link>
                           </td>
 
                           {/* Status */}
@@ -313,6 +334,15 @@ export default async function ManageJobsPage() {
                           {/* Actions */}
                           <td className="px-5 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/dashboard/recruiter/jobs/${job._id}/applications`}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-[#12131a] hover:bg-[#1a1b2b] hover:border-[#8c84fc]/50 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white transition-colors"
+                                title="View candidate applications"
+                              >
+                                <Users className="h-3.5 w-3.5 text-[#8c84fc]" />
+                                <span>Applications</span>
+                              </Link>
+
                               <UpdateJobForm job={job} />
 
                               <DeleteJobsDialog job={job} />

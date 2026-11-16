@@ -20,6 +20,7 @@ import {
   Users,
   Wallet,
   Settings,
+  ArrowLeft,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -146,7 +147,16 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader />
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        <Link
+          href="/"
+          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors group cursor-pointer"
+          title="Back to Home Page"
+        >
+          <ArrowLeft className="h-4 w-4 text-sidebar-foreground/70 group-hover:text-sidebar-foreground group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to Home</span>
+        </Link>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup />
         <SidebarGroup />

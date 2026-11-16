@@ -1,6 +1,6 @@
 import React from "react"
-import { getUsers } from "@/lib/api/users"
 import { AdminUsersTable, type AdminUserItem } from "@/components/admin/AdminUsersTable"
+import { getUsers } from "@/lib/actions/betterAuthUsers"
 
 const AdminUserPage = async () => {
   const rawUsers = await getUsers()

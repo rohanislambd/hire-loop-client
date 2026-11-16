@@ -51,23 +51,6 @@ export async function applyToAJob(data: JobApplication) {
   return response.json()
 }
 
-// get application data
-export const getApplications = async (
-  query = ""
-): Promise<JobApplication[]> => {
-  try {
-    const res = await fetch(`${BASE_URL}/applications?${query}`, {
-      cache: "no-store",
-    })
-    if (!res.ok) {
-      return []
-    }
-    return res.json()
-  } catch (error) {
-    console.log("getApplications error", error)
-    return []
-  }
-}
 
 //application count
 

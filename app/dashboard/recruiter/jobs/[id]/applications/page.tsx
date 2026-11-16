@@ -1,7 +1,8 @@
-import React from "react"
+
 import { getJobById } from "@/lib/api/jobs"
-import { getApplications } from "@/lib/actions/jobs"
+
 import { JobApplicationsTable } from "@/components/recruiter/JobApplicationsTable"
+import { getApplications } from "@/lib/api/application"
 
 interface PageProps {
   params: Promise<{ id: string }>

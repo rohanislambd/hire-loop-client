@@ -29,6 +29,7 @@ import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { applyToAJob, getApplicationsCount } from "@/lib/actions/jobs"
 import { toast } from "@/components/ui/toast"
+import { getUserPremiumById } from "@/lib/api/users"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -60,12 +61,17 @@ export default function JobDetailsPage({ params }: PageProps) {
     if (!user) {
       router.push(`/sign-in?redirectTo=/browse-job/${id}`)
     } else if (user.role === "seeker") {
-      // number of jobs applied  by this users
 
+      // is premium user
+      const premiumResult = await getUserPremiumById(user.id)
+      console.log('premiumResult', premiumResult);
+      
+      // number of jobs applied  by this users
       const countResult = await getApplicationsCount(`applicantId=${user.id}`)
+       
 
       //less more than 10 and not premium user
-      if (countResult.count >= 3) {
+      if (!premiumResult.premium && countResult.count >= 2) {
         // redirect to the payment page
         router.push("/payment")
         return
@@ -93,7 +99,9 @@ export default function JobDetailsPage({ params }: PageProps) {
           router.push("/browse-job")
         }
       }
-    } else {
+    } 
+    
+    else {
       console.log("user is not a job seeker")
     }
   }

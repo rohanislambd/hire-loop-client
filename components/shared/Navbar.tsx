@@ -13,11 +13,19 @@ import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 
 
+const PLACEHOLDER_AVATAR =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"
+
 export default function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
   const { data: session } = authClient.useSession()
+
+  const userAvatar =
+    session?.user?.image ||
+    (session?.user as { imageUrl?: string | null })?.imageUrl ||
+    PLACEHOLDER_AVATAR
 
   const NAV_LINKS = [
   { name: "Browse Jobs", href: "/browse-job" },
@@ -86,7 +94,7 @@ export default function Navbar() {
               <div className="flex items-center gap-2.5">
                 <Avatar className="size-8 border border-zinc-700/80">
                   <AvatarImage
-                    src={session?.user?.image as string}
+                    src={userAvatar}
                     alt={session?.user?.name || "User"}
                   />
                   <AvatarFallback className="bg-indigo-600 text-xs font-semibold text-white">
@@ -130,7 +138,7 @@ export default function Navbar() {
             <>
             <Avatar className="size-8 border border-zinc-700/80">
               <AvatarImage
-                src={session?.user?.image as string}
+                src={userAvatar}
                 alt={session?.user?.name || "User"}
               />
               <AvatarFallback className="bg-indigo-600 text-xs font-semibold text-white">
@@ -202,7 +210,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-3 p-2.5 rounded-xl border border-neutral-800 bg-neutral-900/60">
                       <Avatar className="size-9 border border-zinc-700/80">
                         <AvatarImage
-                          src={session?.user?.image as string}
+                          src={userAvatar}
                           alt={session?.user?.name || "User"}
                         />
                         <AvatarFallback className="bg-indigo-600 text-xs font-semibold text-white">

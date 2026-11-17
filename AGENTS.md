@@ -76,5 +76,5 @@ hireloop/
   - Merge classes using the `cn(...)` utility from `@/lib/utils`.
 - **Icons**: Use icons exclusively from `lucide-react`.
 - **Authentication**:
-  - Server-side session checks: use `auth.api.getSession({ headers })` from `@/lib/auth`.
+  - Server-side session checks: use `auth.api.getSession({ headers })` from `@/lib/auth`.e
   - Client-side auth state and actions: use `authClient` from `@/lib/auth-client`.

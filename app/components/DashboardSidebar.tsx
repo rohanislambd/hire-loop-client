@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { authClient } from "@/lib/auth-client"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlusCircle } from "lucide-react"
 import {
   Bookmark,
@@ -173,7 +174,33 @@ export function DashboardSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent/50 p-2.5 border border-sidebar-border/60">
+          <Avatar className="size-9 border border-sidebar-border shrink-0">
+            <AvatarImage
+              src={
+                session?.user?.image ||
+                (session?.user as { imageUrl?: string | null })?.imageUrl ||
+                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"
+              }
+              alt={session?.user?.name || "User"}
+            />
+            <AvatarFallback className="bg-[#5d63f6] text-xs font-semibold text-white">
+              {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="text-xs font-semibold text-sidebar-foreground truncate">
+              {session?.user?.name || "User"}
+            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="inline-flex items-center rounded-md bg-[#5d63f6]/15 border border-[#5d63f6]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#958eff] capitalize">
+                {role}
+              </span>
+            </div>
+          </div>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   )
 }

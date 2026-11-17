@@ -11,9 +11,9 @@ import {
   EyeOff,
   ArrowRight,
   Building2,
-  ShieldCheck,
   Briefcase,
   Loader2,
+  Upload,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
-type Role = "seeker" | "recruiter" | "admin"
+type Role = "seeker" | "recruiter"
 
 const ROLE_OPTIONS: {
   id: Role
@@ -31,7 +31,6 @@ const ROLE_OPTIONS: {
 }[] = [
   { id: "seeker", label: "Seeker", icon: Briefcase },
   { id: "recruiter", label: "Recruiter", icon: Building2 },
-  { id: "admin", label: "Admin", icon: ShieldCheck },
 ]
 
 export default function SignUpPage() {
@@ -40,9 +39,47 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState<Role>("seeker")
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useState<string>("")
+  const [imageUploading, setImageUploading] = useState(false)
+  void imageFile // State preserved
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleImageChange = async(e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const previewUrl = URL.createObjectURL(file)
+      setImagePreview(previewUrl)
+      if(!file) return 
+
+      try {
+        setImageUploading(true)
+        const formData = new FormData()
+        formData.append('image', file)
+        const imagebbApi = `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMAGEBB_API_KEY}`;
+
+        const res = await fetch(imagebbApi, {
+          method: "POST",
+          body: formData
+        })
+        const result = await res.json()
+        const uploadedUrl = result?.data?.display_url || result?.data?.url
+
+        if (uploadedUrl) {
+          setImageUrl(uploadedUrl)
+          console.log("Uploaded Image URL:", uploadedUrl);
+        }
+      } catch (err) {
+        console.error("Image upload error:", err)
+      } finally {
+        setImageUploading(false)
+      }
+    }
+  }
  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -53,7 +90,8 @@ export default function SignUpPage() {
       name,
       email,
       password,
-      role,
+      // role,
+      ...(imageUrl ? { image: imageUrl } : {}),
     }
 
     try {
@@ -140,7 +178,7 @@ export default function SignUpPage() {
               <Label className="text-xs font-medium text-zinc-300">
                 Join as
               </Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {ROLE_OPTIONS.map((item) => {
                   const Icon = item.icon
                   const isSelected = role === item.id
@@ -188,6 +226,41 @@ export default function SignUpPage() {
                   onChange={(e) => setName(e.target.value)}
                   className="h-10 rounded-xl border-zinc-800 bg-zinc-950/60 pr-3 pl-9 text-sm text-zinc-200 placeholder:text-zinc-600 focus-visible:border-indigo-500 focus-visible:ring-indigo-500"
                 />
+              </div>
+            </div>
+
+            {/* Profile Image Field */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="image"
+                className="text-xs font-medium text-zinc-300"
+              >
+                Profile Photo (Optional)
+              </Label>
+              <div className="flex items-center gap-3">
+                <div className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60 text-zinc-400">
+                  {imageUploading ? (
+                    <Loader2 className="size-4 animate-spin text-indigo-400" />
+                  ) : imagePreview ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={imagePreview}
+                      alt="Profile preview"
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <Upload className="size-4 text-zinc-500" />
+                  )}
+                </div>
+                <div className="relative flex-1">
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="h-10 cursor-pointer rounded-xl border-zinc-800 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-400 file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-zinc-800 file:px-2 file:py-1 file:text-xs file:font-medium file:text-zinc-200 hover:file:bg-zinc-700 focus-visible:border-indigo-500 focus-visible:ring-indigo-500"
+                  />
+                </div>
               </div>
             </div>
 

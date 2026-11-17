@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,30 +10,29 @@ import { Separator } from '@/components/ui/separator';
 import { authClient } from '@/lib/auth-client';
 import { useSearchParams } from 'next/navigation';
 
-export default function SignInPage() {
+function SignInContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
- const searchParams = useSearchParams();
- const redirectTo = searchParams.get("redirectTo") ??  "/"
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") ??  "/"
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = {
       email,
       password,
     };
-    // console.log('Sign In Form Data:', formData);
-    const { data, error } = await authClient.signIn.email({
-        ...formData,
-        callbackURL: redirectTo,
+    await authClient.signIn.email({
+      ...formData,
+      callbackURL: redirectTo,
     })
   };
 
   const handleGoogleSignIn = async() => {
-     const data = await authClient.signIn.social({
+    await authClient.signIn.social({
       provider: "google"
-     })
+    })
   };
 
   return (
@@ -190,5 +189,13 @@ export default function SignInPage() {
         
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full bg-[#030108]" />}>
+      <SignInContent />
+    </Suspense>
   );
 }

@@ -32,15 +32,6 @@ import {
 } from "@/types/jobs"
 import { authClient } from "@/lib/auth-client"
 
-// Re-export shared types/constants for zero-breaking-change backward compatibility
-export {
-  JOB_CATEGORIES,
-  JOB_TYPES,
-  SALARY_FREQUENCIES,
-  type JobData,
-  type JobType,
-}
-
 export default function PostNewJobPage() {
   const [jobTitle, setJobTitle] = useState("")
   const [companyName, setCompanyName] = useState("")

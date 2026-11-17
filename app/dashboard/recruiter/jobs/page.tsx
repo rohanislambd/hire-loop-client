@@ -21,9 +21,6 @@ import { type JobPostItem } from "@/types/jobs"
 import UpdateJobForm from "@/app/components/UpdateJobForm"
 import { getSessionFromServer } from "@/lib/core/serversession"
 
-// Re-export for backward compatibility
-export type { JobPostItem }
-
 export default async function ManageJobsPage() {
  
   const session = await getSessionFromServer()

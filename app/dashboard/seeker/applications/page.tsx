@@ -5,9 +5,9 @@ import Link from "next/link"
 import { Download, Inbox } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { getApplications } from "@/lib/actions/jobs"
 import { authClient } from "@/lib/auth-client"
 import type { JobApplication, ApplicationStatus } from "@/types/applications"
+import { getApplications } from "@/lib/api/application"
 
 // Converts an ISO date string (from MongoDB appliedAt) into a human readable relative time
 function formatTimeAgo(dateString?: string): string {

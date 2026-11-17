@@ -1,13 +1,10 @@
+import { protectedMutation } from "../core/serversession";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 
 export const checkoutVerify = async(sessionId: string) => {
-     const res = await fetch(`${BASE_URL}/payments/checkout-verify`,{
-        method: "POST",
-        headers:{
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({sessionId})
-     })
+    const api = `${BASE_URL}/payments/checkout-verify`;
+    const res = await protectedMutation(api, "POST",{sessionId})
      return res.json();
 }

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Briefcase, Search, SlidersHorizontal } from "lucide-react"
+import { ArrowLeft, Briefcase, Search, SlidersHorizontal } from "lucide-react"
 
 import { BrowseJobCard } from "@/components/jobs/BrowseJobCard"
 import {
@@ -103,6 +103,8 @@ export function BrowseJobsClient({ jobs }: BrowseJobsClientProps) {
   return (
     <div className="min-h-screen w-full bg-[#090a0f] text-white px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
+       
+
         {/* Top Search Bar */}
         <form
           onSubmit={handleSearch}
@@ -130,7 +132,17 @@ export function BrowseJobsClient({ jobs }: BrowseJobsClientProps) {
             </Button>
           </div>
         </form>
-
+           {/* Back to Home Button */}
+        <div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-[#0d0e14] px-3.5 py-2 text-xs sm:text-sm font-medium text-zinc-400 hover:text-white hover:bg-[#12131b] hover:border-zinc-700 transition-colors group cursor-pointer shadow-sm"
+            title="Back to Home"
+          >
+            <ArrowLeft className="h-4 w-4 text-zinc-400 group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
         {/* Mobile Filter Toggle */}
         <div className="flex items-center justify-between lg:hidden">
           <Button

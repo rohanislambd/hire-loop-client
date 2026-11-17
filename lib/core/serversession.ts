@@ -29,7 +29,7 @@ export const authFetch = async (api: string) => {
       if(res.status === 401 || res.status === 403){
         redirect("/unauthorized")
      }
-      return res
+      return res;
 }
 //common structure token send 
 export const protectedMutation = async (api:string, method:string, data?: unknown) => {

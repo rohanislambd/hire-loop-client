@@ -90,7 +90,7 @@ export default function SignUpPage() {
       name,
       email,
       password,
-      // role,
+      role,
       ...(imageUrl ? { image: imageUrl } : {}),
     }
 
